@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  # The Backend (Express)
+  backend:
+    build: ./backend  # Tells Compose to build the Dockerfile in ./backend
+    ports:
+      - "5000:5000"   # Exposes port 5000 to your host machine
+    environment:
+      # This is how the backend finds the database
+      - MONGO_URI=mongodb://mongo:27017/mydatabase
+    networks:
+      - mern-net
+    depends_on:
+      - mongo         # Tells Compose to start mongo *before* the backend
+
+  # The Frontend (React)
+  frontend:
+    build: ./frontend # Tells Compose to build the Dockerfile in ./frontend
+    ports:
+      - "3000:3000"   # Exposes port 3000 to your host machine
+    stdin_open: true  # Needed for create-react-app dev server
+    tty: true         # Needed for create-react-app dev server
+    networks:
+      - mern-net
+    depends_on:
+      - backend       # Tells Compose to start the backend *before* the frontend
+
+  # The Database (MongoDB)
+  mongo:
+    image: mongo:latest  # Pulls the official Mongo image
+    ports:
+      - "27017:27017"   # Lets you connect to the DB from your host (e.g., with MongoDB Compass)
+    volumes:
+      - mongo-data:/data/db # Keeps your data safe even if the container stops
+    networks:
+      - mern-net
+
+# Define the network all containers will share
+networks:
+  mern-net:
+    driver: bridge
+
+# Define the volume for persistent data
+volumes:
+  mongo-data:
